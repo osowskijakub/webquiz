@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Quiz</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f8fafc; /* Lighter background */
+        }
+        /* Minimalistic styles */
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* Slightly less rounded */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Softer shadow */
+            padding: 1.5rem; /* Reduced padding */
+            max-width: 1000px; /* Slightly narrower */
+            margin: 2rem auto;
+            border: 1px solid #e2e8f0; /* Subtle border */
+        }
+        .question-card {
+            background-color: #ffffff; /* White background */
+            border-radius: 0.5rem;
+            padding: 1.25rem; /* Reduced padding */
+            margin-bottom: 1rem; /* Reduced margin */
+            /* Removed border for a cleaner look */
+        }
+        .question-title {
+            font-weight: 500; /* Slightly lighter font weight */
+            margin-bottom: 1rem;
+            color: #334155; /* Softer text color */
+        }
+        .option-label {
+            display: block;
+            padding: 0.6rem 0.8rem; /* Reduced padding */
+            margin-bottom: 0.4rem; /* Reduced margin */
+            border-radius: 0.4rem;
+            border: 1px solid #cbd5e1; /* Softer border */
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            color: #475569;
+        }
+        .option-label:hover {
+            background-color: #f0f4f8; /* Lighter hover background */
+            border-color: #94a3b8; /* Softer hover border */
+        }
+        input[type="radio"]:checked + .option-label {
+            background-color: #e0e7ff; /* Lighter checked background */
+            border-color: #6366f1; /* Primary color border */
+            color: #312e81; /* Darker text for checked state */
+            font-weight: 500;
+        }
+        .nav-button, .submit-button, .play-again-button {
+            padding: 0.6rem 1.2rem; /* Reduced padding */
+            border-radius: 0.5rem; /* Softer rounded corners */
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            box-shadow: none; /* Remove shadows by default */
+            border: none; /* Remove borders */
+        }
+        .nav-button {
+            background-color: #6366f1; /* Primary color */
+            color: white;
+        }
+        .nav-button:hover {
+            background-color: #4f46e5; /* Darker hover */
+        }
+        .submit-button {
+            background-color: #22c55e; /* Green for submit */
+            color: white;
+            width: 100%;
+        }
+        .submit-button:hover {
+            background-color: #16a34a; /* Darker green */
+        }
+        .play-again-button {
+            background-color: #3b82f6; /* Blue for play again */
+            color: white;
+            margin-top: 1rem;
+        }
+        .play-again-button:hover {
+            background-color: #2563eb; /* Darker blue */
+        }
+        .results-container {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 0.6rem;
+            text-align: center;
+            font-size: 1.1rem; /* Slightly smaller font */
+            font-weight: 500;
+            /* Removed border, will rely on background color for distinction */
+            background-color: #ffffff; /* Default white background */
+            color: #334155;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); /* Very subtle shadow */
+        }
+        .congratulations {
+            background-color: #f0fdf4; /* Very light green */
+            color: #166534;
+            border: 1px solid #dcfce7; /* Subtle border */
+        }
+        .keep-learning {
+            background-color: #fff7f7; /* Very light red */
+            color: #b91c1c;
+            border: 1px solid #ffe4e6; /* Subtle border */
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="quiz-container">
+        <h1 class="text-2xl font-semibold text-center mb-6 text-gray-700">Check your Azure knowledge</h1>
+        <div id="questionContainer">
+            <!-- Current question will be dynamically inserted here by JavaScript -->
+        </div>
+        <div class="flex justify-between mt-5">
+            <button id="prevButton" class="nav-button hidden">Previous</button>
+            <button id="nextButton" class="nav-button">Next</button>
+            <button id="submitQuiz" class="submit-button hidden">Submit Answers</button>
+        </div>
+        <div id="results" class="results-container hidden">
+            <!-- Results will be displayed here -->
+            <button id="playAgainButton" class="play-again-button hidden">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Array of quiz questions, options, and correct answers
+        const quizQuestions = [
+            {
+                question: "Which Azure service is used for serverless computing?",
+                options: ["Azure Virtual Machines", "Azure Functions", "Azure Kubernetes Service", "Azure SQL Database"],
+                answer: "Azure Functions"
+            },
+            {
+                question: "What is Azure Active Directory primarily used for?",
+                options: ["Storing relational databases", "Managing virtual networks", "Identity and access management", "Hosting web applications"],
+                answer: "Identity and access management"
+            },
+            {
+                question: "Which of the following is a Platform as a Service (PaaS) offering in Azure?",
+                options: ["Azure Virtual Machines", "Azure Storage", "Azure App Service", "Azure Networking"],
+                answer: "Azure App Service"
+            },
+            {
+                question: "What is the primary purpose of Azure Blob Storage?",
+                options: ["Storing structured data", "Storing unstructured data like images and videos", "Hosting virtual machines", "Managing network traffic"],
+                answer: "Storing unstructured data like images and videos"
+            },
+            {
+                question: "Which Azure service allows you to deploy and scale containerized applications?",
+                options: ["Azure Data Factory", "Azure Logic Apps", "Azure Kubernetes Service (AKS)", "Azure Cosmos DB"],
+                answer: "Azure Kubernetes Service (AKS)"
+            },
+            {
+                question: "What is a 'Resource Group' in Azure?",
+                options: ["A collection of Azure users", "A logical container for Azure resources", "A type of virtual network", "A billing account"],
+                answer: "A logical container for Azure resources"
+            },
+            {
+                question: "Which Azure service provides a fully managed relational database service?",
+                options: ["Azure Cosmos DB", "Azure Blob Storage", "Azure SQL Database", "Azure Data Lake Storage"],
+                answer: "Azure SQL Database"
+            },
+            {
+                question: "What is the benefit of using Azure Virtual Network (VNet)?",
+                options: ["To store large files", "To provide secure communication between Azure resources and on-premises networks", "To run serverless functions", "To manage user identities"],
+                answer: "To provide secure communication between Azure resources and on-premises networks"
+            },
+            {
+                question: "Which Azure tool is used to manage Azure resources from the command line?",
+                options: ["Azure Portal", "Azure CLI", "Azure PowerShell", "Both Azure CLI and Azure PowerShell"],
+                answer: "Both Azure CLI and Azure PowerShell"
+            },
+            {
+                question: "What does 'High Availability' refer to in Azure?",
+                options: ["The ability to quickly deploy new resources", "Ensuring that applications and services remain accessible even if a component fails", "The speed of data transfer", "The cost-effectiveness of Azure services"],
+                answer: "Ensuring that applications and services remain accessible even if a component fails"
+            }
+        ];
+
+        const questionContainer = document.getElementById('questionContainer');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const submitButton = document.getElementById('submitQuiz');
+        const resultsDiv = document.getElementById('results');
+        const playAgainButton = document.getElementById('playAgainButton');
+
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizQuestions.length).fill(null);
+
+        function renderQuestion() {
+            questionContainer.innerHTML = '';
+            resultsDiv.classList.add('hidden');
+            playAgainButton.classList.add('hidden');
+
+            const q = quizQuestions[currentQuestionIndex];
+            const questionCard = document.createElement('div');
+            questionCard.className = 'question-card';
+            questionCard.innerHTML = `
+                <p class="question-title text-lg mb-4">${currentQuestionIndex + 1}. ${q.question}</p>
+                <div class="options-container">
+                    ${q.options.map(option => `
+                        <div class="mb-2">
+                            <input type="radio" id="q${currentQuestionIndex}-option-${option.replace(/\s+/g, '-')}" name="question${currentQuestionIndex}" value="${option}" class="hidden" ${userAnswers[currentQuestionIndex] === option ? 'checked' : ''}>
+                            <label for="q${currentQuestionIndex}-option-${option.replace(/\s+/g, '-')}" class="option-label">${option}</label>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            questionContainer.appendChild(questionCard);
+
+            prevButton.classList.toggle('hidden', currentQuestionIndex === 0);
+            nextButton.classList.toggle('hidden', currentQuestionIndex === quizQuestions.length - 1);
+            submitButton.classList.toggle('hidden', currentQuestionIndex !== quizQuestions.length - 1);
+
+            const radioButtons = questionCard.querySelectorAll(`input[name="question${currentQuestionIndex}"]`);
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    userAnswers[currentQuestionIndex] = event.target.value;
+                });
+            });
+        }
+
+        function goToNextQuestion() {
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        }
+
+        function goToPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function calculateResults() {
+            let score = 0;
+            const totalQuestions = quizQuestions.length;
+
+            quizQuestions.forEach((q, index) => {
+                if (userAnswers[index] === q.answer) {
+                    score++;
+                }
+            });
+
+            const percentage = (score / totalQuestions) * 100;
+            resultsDiv.classList.remove('hidden');
+            resultsDiv.innerHTML = `You scored ${score} out of ${totalQuestions} (${percentage.toFixed(0)}%).<br>`;
+
+            if (percentage >= 80) {
+                resultsDiv.classList.remove('keep-learning');
+                resultsDiv.classList.add('congratulations');
+                resultsDiv.innerHTML += `Congratulations! You did great!`;
+            } else {
+                resultsDiv.classList.remove('congratulations');
+                resultsDiv.classList.add('keep-learning');
+                resultsDiv.innerHTML += `Keep learning! You'll get there!`;
+            }
+            resultsDiv.appendChild(playAgainButton);
+            playAgainButton.classList.remove('hidden');
+
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsDiv.classList.add('hidden');
+            playAgainButton.classList.add('hidden');
+            renderQuestion();
+        }
+
+        prevButton.addEventListener('click', goToPreviousQuestion);
+        nextButton.addEventListener('click', goToNextQuestion);
+        submitButton.addEventListener('click', calculateResults);
+        playAgainButton.addEventListener('click', resetQuiz);
+
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+</body>
+</html>
